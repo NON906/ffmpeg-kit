@@ -29,8 +29,8 @@
 #define DLL_EXPORT 
 #endif
 
-//#define THREAD_LOCAL __thread
 #define THREAD_LOCAL
+#define THREAD_LOCAL_PARAM
 #define THREAD_LOCAL_MUST __thread
 #include <stdatomic.h>
 #include "libavutil/thread.h"
@@ -341,56 +341,56 @@ typedef struct VideoState {
 } VideoState;
 
 /* options specified by the user */
-static THREAD_LOCAL const AVInputFormat *file_iformat;
-static THREAD_LOCAL const char *input_filename;
-static THREAD_LOCAL const char *window_title;
-static THREAD_LOCAL int default_width  = 640;
-static THREAD_LOCAL int default_height = 480;
-static THREAD_LOCAL int screen_width  = 0;
-static THREAD_LOCAL int screen_height = 0;
-static THREAD_LOCAL int screen_left = SDL_WINDOWPOS_CENTERED;
-static THREAD_LOCAL int screen_top = SDL_WINDOWPOS_CENTERED;
-static THREAD_LOCAL int audio_disable;
-static THREAD_LOCAL int video_disable;
-static THREAD_LOCAL int subtitle_disable;
-static THREAD_LOCAL const char* wanted_stream_spec[AVMEDIA_TYPE_NB] = {0};
-static THREAD_LOCAL int seek_by_bytes = -1;
-static THREAD_LOCAL float seek_interval = 10;
-static THREAD_LOCAL int display_disable;
-static THREAD_LOCAL int borderless;
-static THREAD_LOCAL int alwaysontop;
-static THREAD_LOCAL int startup_volume = 100;
-static THREAD_LOCAL int show_status = -1;
-static THREAD_LOCAL int av_sync_type = AV_SYNC_AUDIO_MASTER;
-static THREAD_LOCAL int64_t start_time = AV_NOPTS_VALUE;
-static THREAD_LOCAL int64_t duration = AV_NOPTS_VALUE;
-static THREAD_LOCAL int fast = 0;
-static THREAD_LOCAL int genpts = 0;
-static THREAD_LOCAL int lowres = 0;
-static THREAD_LOCAL int decoder_reorder_pts = -1;
-static THREAD_LOCAL int autoexit;
-static THREAD_LOCAL int exit_on_keydown;
-static THREAD_LOCAL int exit_on_mousedown;
-static THREAD_LOCAL int loop = 1;
-static THREAD_LOCAL int framedrop = -1;
-static THREAD_LOCAL int infinite_buffer = -1;
-static THREAD_LOCAL enum ShowMode show_mode = SHOW_MODE_NONE;
-static THREAD_LOCAL const char *audio_codec_name;
-static THREAD_LOCAL const char *subtitle_codec_name;
-static THREAD_LOCAL const char *video_codec_name;
+static THREAD_LOCAL_PARAM const AVInputFormat *file_iformat;
+static THREAD_LOCAL_PARAM const char *input_filename;
+static THREAD_LOCAL_PARAM const char *window_title;
+static THREAD_LOCAL_PARAM int default_width  = 640;
+static THREAD_LOCAL_PARAM int default_height = 480;
+static THREAD_LOCAL_PARAM int screen_width  = 0;
+static THREAD_LOCAL_PARAM int screen_height = 0;
+static THREAD_LOCAL_PARAM int screen_left = SDL_WINDOWPOS_CENTERED;
+static THREAD_LOCAL_PARAM int screen_top = SDL_WINDOWPOS_CENTERED;
+static THREAD_LOCAL_PARAM int audio_disable;
+static THREAD_LOCAL_PARAM int video_disable;
+static THREAD_LOCAL_PARAM int subtitle_disable;
+static THREAD_LOCAL_PARAM const char* wanted_stream_spec[AVMEDIA_TYPE_NB] = {0};
+static THREAD_LOCAL_PARAM int seek_by_bytes = -1;
+static THREAD_LOCAL_PARAM float seek_interval = 10;
+static THREAD_LOCAL_PARAM int display_disable;
+static THREAD_LOCAL_PARAM int borderless;
+static THREAD_LOCAL_PARAM int alwaysontop;
+static THREAD_LOCAL_PARAM int startup_volume = 100;
+static THREAD_LOCAL_PARAM int show_status = -1;
+static THREAD_LOCAL_PARAM int av_sync_type = AV_SYNC_AUDIO_MASTER;
+static THREAD_LOCAL_PARAM int64_t start_time = AV_NOPTS_VALUE;
+static THREAD_LOCAL_PARAM int64_t duration = AV_NOPTS_VALUE;
+static THREAD_LOCAL_PARAM int fast = 0;
+static THREAD_LOCAL_PARAM int genpts = 0;
+static THREAD_LOCAL_PARAM int lowres = 0;
+static THREAD_LOCAL_PARAM int decoder_reorder_pts = -1;
+static THREAD_LOCAL_PARAM int autoexit;
+static THREAD_LOCAL_PARAM int exit_on_keydown;
+static THREAD_LOCAL_PARAM int exit_on_mousedown;
+static THREAD_LOCAL_PARAM int loop = 1;
+static THREAD_LOCAL_PARAM int framedrop = -1;
+static THREAD_LOCAL_PARAM int infinite_buffer = -1;
+static THREAD_LOCAL_PARAM enum ShowMode show_mode = SHOW_MODE_NONE;
+static THREAD_LOCAL_PARAM const char *audio_codec_name;
+static THREAD_LOCAL_PARAM const char *subtitle_codec_name;
+static THREAD_LOCAL_PARAM const char *video_codec_name;
 double rdftspeed = 0.02;
-static THREAD_LOCAL int64_t cursor_last_shown;
-static THREAD_LOCAL int cursor_hidden = 0;
+static THREAD_LOCAL_PARAM int64_t cursor_last_shown;
+static THREAD_LOCAL_PARAM int cursor_hidden = 0;
 #if CONFIG_AVFILTER
-static THREAD_LOCAL const char **vfilters_list = NULL;
-static THREAD_LOCAL int nb_vfilters = 0;
-static THREAD_LOCAL char *afilters = NULL;
+static THREAD_LOCAL_PARAM const char **vfilters_list = NULL;
+static THREAD_LOCAL_PARAM int nb_vfilters = 0;
+static THREAD_LOCAL_PARAM char *afilters = NULL;
 #endif
-static THREAD_LOCAL int autorotate = 1;
+static THREAD_LOCAL_PARAM int autorotate = 1;
 #ifndef FFMPEG_KIT
-static THREAD_LOCAL int find_stream_info = 1;
+static THREAD_LOCAL_PARAM int find_stream_info = 1;
 #endif
-static THREAD_LOCAL int filter_nbthreads = 0;
+static THREAD_LOCAL_PARAM int filter_nbthreads = 0;
 
 /* current context */
 static THREAD_LOCAL int is_full_screen;
@@ -2653,7 +2653,11 @@ static int video_thread(void *arg)
             tb = av_buffersink_get_time_base(filt_out);
 #endif
             duration = (frame_rate.num && frame_rate.den ? av_q2d((AVRational){frame_rate.den, frame_rate.num}) : 0);
+#ifdef _WIN32
+            pts = (frame->pts == AV_NOPTS_VALUE) ? 0.0 : frame->pts * av_q2d(tb);
+#else
             pts = (frame->pts == AV_NOPTS_VALUE) ? NAN : frame->pts * av_q2d(tb);
+#endif
             ret = queue_picture(is, frame, pts, duration, frame->pkt_pos, is->viddec.pkt_serial);
             av_frame_unref(frame);
 #if CONFIG_AVFILTER
@@ -2791,7 +2795,7 @@ static int audio_decode_frame(VideoState *is)
         return -1;
 
     do {
-#if 1//defined(_WIN32)
+#if 0//defined(_WIN32)
         while (frame_queue_nb_remaining(&is->sampq) == 0) {
             if ((av_gettime_relative() - audio_callback_time) > 1000000LL * is->audio_hw_buf_size / is->audio_tgt.bytes_per_sec / 2) {
                 if (unity_reset_audio) {
@@ -2800,6 +2804,10 @@ static int audio_decode_frame(VideoState *is)
                 return -1;
             }
             av_usleep (1000);
+        }
+#elif 1//defined(_WIN32)
+        if (frame_queue_nb_remaining(&is->sampq) == 0) {
+            return -1;
         }
 #endif
         if (!(af = frame_queue_peek_readable(&is->sampq))) {
@@ -4560,6 +4568,10 @@ DLL_EXPORT int ffplay_start(int argc, char **argv, int id, const char *file_path
 
     int ret = *(int *)ret_ptr;
     av_freep(&ret_ptr);
+
+    audio_disable = 0;
+    video_disable = 0;
+    subtitle_disable = 0;
 
     return ret;
 }
