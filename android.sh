@@ -385,6 +385,16 @@ if [[ -n ${ANDROID_ARCHITECTURES} ]]; then
       exit 1
     fi
 
+    if [[ ${ENABLED_ARCHITECTURES[ARCH_ARM64_V8A]} -eq 1 ]]; then
+      zip --delete "${FFMPEG_KIT_AAR}"/ffmpeg-kit.aar jni/arm64-v8a/libc++_shared.so 1>>"${BASEDIR}"/build.log 2>&1
+    fi
+    if [[ ${ENABLED_ARCHITECTURES[ARCH_ARM_V7A]} -eq 1 ]]; then
+      zip --delete "${FFMPEG_KIT_AAR}"/ffmpeg-kit.aar jni/armeabi-v7a/libc++_shared.so 1>>"${BASEDIR}"/build.log 2>&1
+    fi
+    if [[ ${ENABLED_ARCHITECTURES[ARCH_X86]} -eq 1 ]]; then
+      zip --delete "${FFMPEG_KIT_AAR}"/ffmpeg-kit.aar jni/x86/libc++_shared.so 1>>"${BASEDIR}"/build.log 2>&1
+    fi
+
     echo -e "INFO: Created ffmpeg-kit Android archive successfully.\n" 1>>"${BASEDIR}"/build.log 2>&1
     echo -e "ok\n"
   else
